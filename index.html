@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Greenhouse Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width:720px; margin:2rem auto; }
+    .card{ border:1px solid #ddd; padding:1rem; border-radius:8px; margin-bottom:1rem;}
+    button{ padding:0.6rem 1rem; margin-right:0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>🌱 Greenhouse Monitor</h1>
+  <div class="card">
+    <p>Temperature: <strong id="temp">--</strong></p>
+    <p>Humidity: <strong id="hum">--</strong></p>
+    <p>Soil (raw): <strong id="soil">--</strong></p>
+  </div>
+
+  <div class="card">
+    <h3>Controls</h3>
+    <button onclick="setPump('on')">Pump ON</button>
+    <button onclick="setPump('off')">Pump OFF</button>
+    <p>Status: <span id="status">idle</span></p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    // ===== REPLACE with your project's config =====
+    var firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      appId: "1:...:web:..."
+    };
+    // ==============================================
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+
+    // live listeners
+    db.ref("greenhouse/temperature").on("value", snap => {
+      document.getElementById("temp").innerText = (snap.val() !== null) ? snap.val() + " °C" : "--";
+    });
+    db.ref("greenhouse/humidity").on("value", snap => {
+      document.getElementById("hum").innerText = (snap.val() !== null) ? snap.val() + " %" : "--";
+    });
+    db.ref("greenhouse/soil_raw").on("value", snap => {
+      document.getElementById("soil").innerText = snap.val() || "--";
+    });
+
+    function setPump(state) {
+      document.getElementById("status").innerText = "setting " + state + "...";
+      db.ref("greenhouse/pump").set(state).then(() => {
+        document.getElementById("status").innerText = "pump " + state;
+      }).catch(err => {
+        document.getElementById("status").innerText = "error: " + err.message;
+      });
+    }
+  </script>
+</body>
+</html>
